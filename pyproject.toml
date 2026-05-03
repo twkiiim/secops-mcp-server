@@ -8,3 +8,7 @@ dependencies = [
     "fastmcp>=3.2.4",
     "secops>=0.1.0",
 ]
+
+[[tool.uv.index]]
+url = "https://pypi.org/simple"
+default = true
