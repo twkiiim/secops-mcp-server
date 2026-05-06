@@ -133,6 +133,7 @@ async def get_security_alerts(
                 severity = alert.get('severity', 'Unknown')
 
             result += f'Alert {i}:\n'
+            result += f'ID: {alert.get("id") or alert.get("name") or alert.get("alertId") or "Unknown ID"}\n'
             result += f'Rule: {rule_name}\n'
             result += f'Created: {created_time}\n'
             result += f'Status: {status}\n'
@@ -197,12 +198,34 @@ async def get_security_alert_by_id(
     """
 
     try:
+        from utils import DEFAULT_PROJECT_ID, DEFAULT_CUSTOMER_ID, DEFAULT_REGION
+        
+        project_id = project_id or DEFAULT_PROJECT_ID
+        customer_id = customer_id or DEFAULT_CUSTOMER_ID
+        region = region or DEFAULT_REGION
+        
+        base_url = f"https://{region}-chronicle.googleapis.com/v1alpha"
+        instance_id = f"projects/{project_id}/locations/{region}/instances/{customer_id}"
+        url = f"{base_url}/{instance_id}/legacy:legacyGetAlert"
+
         chronicle = get_chronicle_client(project_id, customer_id, region)
-        response = chronicle.get_alert(alert_id, include_detections)
+        if not chronicle:
+            return f'Error: Failed to initialize Chronicle client. Check project_id and customer_id.'
+
+        params = {
+            "alertId": alert_id,
+            "includeDetections": include_detections
+        }
+
+        response = chronicle.session.get(url, params=params)
+        
+        if response.status_code != 200:
+            return f'Error retrieving security alert for {alert_id}: {response.text}'
+            
+        return json.dumps(response.json())
+        
     except Exception as e:
         return f'Error retrieving security alert for {alert_id}: {str(e)}'
-
-    return json.dumps(response)
 
 @server.tool()
 async def do_update_security_alert(

@@ -6,10 +6,10 @@ import logging
 import os
 import sys
 from dotenv import load_dotenv
+load_dotenv()
+
 from mcp.server.fastmcp import FastMCP
 from utils import get_chronicle_client
-
-load_dotenv()
 
 server = FastMCP(
     "Google Security Operations MCP server",
